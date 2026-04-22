@@ -418,6 +418,12 @@
          HUD  (bottom-right, visible in viewer state)
          ═══════════════════════════════════════════════ -->
     <div id="hud">
+        <!-- Fullscreen toggle -->
+        <button class="hud-btn" id="btn-fullscreen" title="Fullscreen (F)" aria-label="Toggle fullscreen">
+            <svg viewBox="0 0 24 24">
+                <path d="M8 3H5a2 2 0 00-2 2v3M21 8V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3M16 21h3a2 2 0 002-2v-3"/>
+            </svg>
+        </button>
         <!-- Reset view -->
         <button class="hud-btn" id="btn-reset" title="Reset View (R)" aria-label="Reset view">
             <svg viewBox="0 0 24 24">
@@ -460,6 +466,7 @@
         const noWebgl        = document.getElementById('no-webgl');
         const compassWidget  = document.getElementById('compass-widget');
         const compassDial    = document.getElementById('compass-dial');
+        const btnFullscreen  = document.getElementById('btn-fullscreen');
         const btnReset       = document.getElementById('btn-reset');
         const btnGyro        = document.getElementById('btn-gyro');
 
@@ -917,7 +924,12 @@
             // Resize
             window.addEventListener('resize', onResize);
 
+            // Fullscreen change (icon swap)
+            document.addEventListener('fullscreenchange',       onFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
             // HUD buttons
+            btnFullscreen.addEventListener('click', toggleFullscreen);
             btnReset.addEventListener('click',      resetView);
             btnGyro.addEventListener('click',       toggleGyro);
         }
@@ -1087,6 +1099,9 @@
                 case 'ArrowDown':
                     targetLat -= KEYBOARD_PAN_SPEED;
                     break;
+                case 'f': case 'F':
+                    toggleFullscreen();
+                    break;
                 case 'r': case 'R':
                     resetView();
                     break;
@@ -1106,6 +1121,35 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           FULLSCREEN
+           ═══════════════════════════════════════════════ */
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const el = document.documentElement;
+                if (el.requestFullscreen) {
+                    el.requestFullscreen().catch(() => {});
+                } else if (el.webkitRequestFullscreen) {
+                    el.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        /** Swap the fullscreen icon between expand ↔ shrink */
+        function onFullscreenChange() {
+            const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            btnFullscreen.innerHTML = isFS
+                ? '<svg viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 01-2 2H3M21 8h-3a2 2 0 01-2-2V3M3 16h3a2 2 0 012 2v3M16 21v-3a2 2 0 012-2h3"/></svg>'
+                : '<svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 00-2 2v3M21 8V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3M16 21h3a2 2 0 002-2v-3"/></svg>';
         }
 
 
